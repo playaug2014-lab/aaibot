@@ -1,9 +1,10 @@
 import os
 from aiohttp import web
 
+
 # ENV
 STORE_NAME = os.environ.get("STORE_NAME", "Teleone")
-PUBLIC_URL = os.environ.get("PUBLIC_URL", "").rstrip("/")
+PUBLIC_URL = os.environ.get("PUBLIC_URL", "https://aaibot.onrender.com").rstrip("/")
 PORT = int(os.environ.get("PORT", "8080"))
 
 # SIMPLE REPLY
