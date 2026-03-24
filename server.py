@@ -1,40 +1,23 @@
-import asyncio, base64, os, time
-import aiohttp
+import os
 from aiohttp import web
 
-# ── ENV ─────────────────────────────────────────────
-SARVAM_API_KEY = os.environ.get("SARVAM_API_KEY", "")
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
-STORE_NAME     = os.environ.get("STORE_NAME", "Teleone")
-PUBLIC_URL     = os.environ.get("PUBLIC_URL", "").rstrip("/")
-PORT           = int(os.environ.get("PORT", "8080"))
+# ENV
+STORE_NAME = os.environ.get("STORE_NAME", "Teleone")
+PUBLIC_URL = os.environ.get("PUBLIC_URL", "").rstrip("/")
+PORT = int(os.environ.get("PORT", "8080"))
 
-# ── MEMORY ──────────────────────────────────────────
-audio_store = {}
-call_histories = {}
-
-# ── SIMPLE LLM (SAFE) ───────────────────────────────
+# SIMPLE REPLY
 async def get_reply(text):
     return f"Aapne kaha: {text}"
 
-# ── ROUTE: /audio ───────────────────────────────────
-async def serve_audio(request):
-    token = request.match_info["token"]
-    b64 = audio_store.pop(token, "")
-    if not b64:
-        return web.Response(status=404)
-    return web.Response(body=base64.b64decode(b64), content_type="audio/wav")
-
-# ── ROUTE: /voice/start ─────────────────────────────
+# START CALL
 async def voice_start(request):
     try:
         data = await request.post()
     except:
         data = {}
 
-    call_sid = data.get("CallSid", "unknown")
-    caller   = data.get("From", "unknown")
-
+    caller = data.get("From", "unknown")
     print(f"📞 Call from {caller}")
 
     greeting = f"Namaste! Main Priya bol rahi hoon {STORE_NAME} se. Kaise madad kar sakti hoon?"
@@ -49,13 +32,14 @@ async def voice_start(request):
         content_type="application/xml"
     )
 
-# ── ROUTE: /voice/respond ───────────────────────────
+# HANDLE RESPONSE
 async def voice_respond(request):
-    data = await request.post()
+    try:
+        data = await request.post()
+    except:
+        data = {}
 
     speech_text = data.get("SpeechResult", "").strip()
-    call_sid    = data.get("CallSid", "unknown")
-
     print(f"User: {speech_text}")
 
     if not speech_text:
@@ -73,20 +57,19 @@ async def voice_respond(request):
         content_type="application/xml"
     )
 
-# ── HEALTH ──────────────────────────────────────────
+# HEALTH CHECK
 async def health(request):
     return web.json_response({"status": "ok"})
 
-# ── APP ─────────────────────────────────────────────
+# APP
 def create_app():
     app = web.Application()
     app.router.add_post("/voice/start", voice_start)
     app.router.add_post("/voice/respond", voice_respond)
-    app.router.add_get("/audio/{token}", serve_audio)
     app.router.add_get("/", health)
     return app
 
-# ── RUN ─────────────────────────────────────────────
+# RUN
 if __name__ == "__main__":
     print("🚀 Server running...")
     web.run_app(create_app(), host="0.0.0.0", port=PORT)
