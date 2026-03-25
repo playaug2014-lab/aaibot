@@ -420,9 +420,31 @@ async def health(request):
     })
 
 
+# ─── Keep-alive: ping self every 10 min to prevent Render cold start ───────
+async def keep_alive():
+    """Pings the health endpoint every 10 minutes so Render stays warm."""
+    await asyncio.sleep(30)  # wait for server to fully start first
+    while True:
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    f"{PUBLIC_URL}/",
+                    timeout=aiohttp.ClientTimeout(total=10)
+                ) as resp:
+                    print(f"🏓 Keep-alive ping: {resp.status}")
+        except Exception as e:
+            print(f"⚠️  Keep-alive failed: {e}")
+        await asyncio.sleep(600)  # every 10 minutes
+
+
+async def on_startup(app):
+    asyncio.create_task(keep_alive())
+
+
 # ─── App setup ─────────────────────────────────────────────────────────────
 def create_app():
     app = web.Application(client_max_size=20 * 1024 * 1024)  # 20 MB for audio uploads
+    app.on_startup.append(on_startup)
     app.router.add_get("/",                    health)
     app.router.add_post("/voice/start",        voice_start)
     app.router.add_post("/voice/respond",      voice_respond)
