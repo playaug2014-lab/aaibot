@@ -193,14 +193,15 @@ async def voice_start(request):
 
     twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say language="hi-IN" voice="Polly.Aditi">{greeting}</Say>
   <Gather input="speech"
           action="{PUBLIC_URL}/voice/respond"
           method="POST"
           language="hi-IN"
           speechTimeout="auto"
           timeout="8"
-          enhanced="true"/>
+          enhanced="true">
+    <Say language="hi-IN" voice="Polly.Aditi">{greeting}</Say>
+  </Gather>
   <Say language="hi-IN" voice="Polly.Aditi">Koi awaaz nahi aayi. Dobara call karein. Dhanyawaad!</Say>
 </Response>"""
 
@@ -244,14 +245,15 @@ async def voice_respond(request):
 
         twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Play>{audio_url}</Play>
   <Gather input="speech"
           action="{PUBLIC_URL}/voice/respond"
           method="POST"
           language="hi-IN"
           speechTimeout="auto"
           timeout="8"
-          enhanced="true"/>
+          enhanced="true">
+    <Play>{audio_url}</Play>
+  </Gather>
   <Say language="hi-IN" voice="Polly.Aditi">Koi sawaal ho toh dobara bolein. Dhanyawaad!</Say>
 </Response>"""
     else:
@@ -259,14 +261,15 @@ async def voice_respond(request):
         safe_reply = reply.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
         twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say language="hi-IN" voice="Polly.Aditi">{safe_reply}</Say>
   <Gather input="speech"
           action="{PUBLIC_URL}/voice/respond"
           method="POST"
           language="hi-IN"
           speechTimeout="auto"
           timeout="8"
-          enhanced="true"/>
+          enhanced="true">
+    <Say language="hi-IN" voice="Polly.Aditi">{safe_reply}</Say>
+  </Gather>
   <Say language="hi-IN" voice="Polly.Aditi">Koi sawaal ho toh bolein. Main yahan hoon.</Say>
 </Response>"""
 
